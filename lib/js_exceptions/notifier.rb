@@ -23,7 +23,7 @@ module JsExceptions
   
       body       data.merge({ 
                     :exception => exception, :host => (request.env["HTTP_X_FORWARDED_HOST"] || request.env["HTTP_HOST"]),
-                    :backtrace => exception["content"],
+                    :backtrace => exception["content"], :remote_ip => request.ip,
                     :rails_root => rails_root, :data => data,
                  })
     end
