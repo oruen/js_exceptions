@@ -3,13 +3,15 @@
   window.ExceptionNotifier = {};
   $.extend(ExceptionNotifier, {
     notify: function (e) {
-      if ( (typeof(logErrors) !== 'undefined') && !logErrors ) { return; }
+      if ( typeof(ExceptionNotifierOptions) !== 'undefined' && (typeof(ExceptionNotifierOptions.logErrors) !== 'undefined') && !ExceptionNotifierOptions.logErrors ) { return; }
       e = this.transformError(e);
       $.extend(e, {
         'Browser': navigator.userAgent,
-        'Page': location.href,
-        'HTML Content': document.documentElement.innerHTML.replace(/\n/g, "\n     ").replace(/\t/g, "     ")
+        'Page': location.href
       });
+      if (typeof(ExceptionNotifierOptions.sendHtml) === 'undefined' || ExceptionNotifierOptions.sendHtml ) {
+        e['HTML Content'] = document.documentElement.innerHTML.replace(/\n/g, "\n     ").replace(/\t/g, "     ");
+      }
       if (Error && new Error().stack) { e.Stack = new Error().stack; }
       if (!e.subject) { e.subject = 'ApplicationError on: ' + window.location.href; }
       this.promtAndSend(e);

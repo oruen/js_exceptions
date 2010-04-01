@@ -12,7 +12,7 @@ JsExceptions
   try {
     <код, который ломается>
   } catch (e) {
-    // для остальных браузером подразумевается работающий windiw.onerror
+    // для остальных браузером подразумевается работающий window.onerror
     if (/Opera|Webkit/.test(navigator.userAgent)) {
       ExceptionNotifier.notify(e);
     }
@@ -80,8 +80,10 @@ JsExceptions
 Что ещё надо знать
 ==================
 
-  Чтобы отключить рассылку емейлов, например, в девелопменте, нужно определить js-переменную window.logErrors и присвоить ей false:
-    window.logErrors = false;
+  Клиентская часть настраивается через свойства объект window.ExceptionNotifierOptions:
+    logErrors - отправлять ли опоовещения об ошибках на сервер
+    sendHtml - прикреплять ли html-содержимое страницы к отчету
+  Можно воспользоваться хелпером js_exceptions_options
 
   Настройки почтовых сообщений во многом повторяют Exception Notifier:
     JsExceptions::Notifier.sender_address - адрес отправителя сообщений
@@ -91,4 +93,4 @@ JsExceptions
   js-код вдохновлен DamnIT, https://damnit.jupiterit.com/
   ruby-код - Exception Notifier, http://github.com/rails/exception_notification/
 
-Copyright (c) 2009 oruen, released under the MIT license
+Copyright (c) 2009-2010 oruen, released under the MIT license
