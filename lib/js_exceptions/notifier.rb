@@ -15,8 +15,8 @@ module JsExceptions
   
     def exception_notification request, exception, data = {}
       content_type "text/plain"
-  
-      subject    "#{email_prefix} #{exception["subject"]}"
+      
+      subject    "#{email_prefix.strip} #{exception["message"].strip}"
   
       recipients exception_recipients
       from       sender_address
