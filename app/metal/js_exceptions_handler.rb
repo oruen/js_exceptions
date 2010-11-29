@@ -5,7 +5,7 @@ class JsExceptionsHandler
   def self.call(env)
     if env["PATH_INFO"] =~ /^\/js_exceptions/
       request = Rack::Request.new(env)
-      JsExceptions::Notifier.deliver_exception_notification request, request.params
+      JsExceptions.notify request, request.params
       [200, {"Content-Type" => "text/html"}, ["ok"]]
     else
       [404, {"Content-Type" => "text/html"}, ["Not Found"]]

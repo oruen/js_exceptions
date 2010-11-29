@@ -1,7 +1,14 @@
 JsExceptions
 ============
 
-  Плагин занимается бомбардировкой электронной почты информацией об ошибках в сценариях javascript.
+Плагин для отлова ошибок в JS. Может посылать ошибку как через Hoptoad, так и простым письмом.
+Конфиг должен выглядеть так:
+
+JsExceptions.configure do |c|
+  c.handler = :hoptoad # может быть :hopotad или :email
+  c.email_prefix = "[js my-super-project-name] "
+  c.exception_recipients = %w(my@email.com my-second-email@gmail.com)
+end
 
 Как это работает
 ================
@@ -79,7 +86,7 @@ JsExceptions
 
 Что ещё надо знать
 ==================
-
+   
   Клиентская часть настраивается через свойства объект window.ExceptionNotifierOptions:
     logErrors - отправлять ли опоовещения об ошибках на сервер
     sendHtml - прикреплять ли html-содержимое страницы к отчету

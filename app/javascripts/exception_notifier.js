@@ -1,4 +1,3 @@
-//= require <jquery>
 (function() {
   window.ExceptionNotifier = {};
   $.extend(ExceptionNotifier, {
@@ -60,11 +59,8 @@
         if ((description = document.getElementById('_error_text'))) {
           error['User Description'] = description.value;
         }
-        params.error.content = this.generateContent(error);
-        params.error.message = this.generateMessage(error);
-        this.killEvent(event);
-        /*window.E = error;*/
-        this.create(params);
+
+        this.create(error);
       };
     },
     send: function () { },
@@ -73,7 +69,7 @@
         url: "/js_exceptions",
         type: "POST",
         dataType: "text/html",
-        data: $.param(params.error)
+        data: $.param(params)
       });
     },
     generateContent: function (params) {
