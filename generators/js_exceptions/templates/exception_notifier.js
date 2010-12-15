@@ -1,4 +1,5 @@
 (function() {
+  // Cross-browser javascript stacktrace generator
   // https://github.com/emwendelin/javascript-stacktrace
   function printStackTrace(options){var ex=(options&&options.e)?options.e:null;var guess=options?!!options.guess:true;var p=new printStackTrace.implementation();var result=p.run(ex);return(guess)?p.guessFunctions(result):result;}
   printStackTrace.implementation=function(){};printStackTrace.implementation.prototype={run:function(ex){ex=ex||(function(){try{var _err=__undef__<<1;}catch(e){return e;}})();var mode=this._mode||this.mode(ex);if(mode==='other'){return this.other(arguments.callee);}else{return this[mode](ex);}},mode:function(e){if(e['arguments']){return(this._mode='chrome');}else if(window.opera&&e.stacktrace){return(this._mode='opera10');}else if(e.stack){return(this._mode='firefox');}else if(window.opera&&!('stacktrace'in e)){return(this._mode='opera');}
@@ -12,8 +13,22 @@
   return stack;},guessFunctionName:function(url,lineNo){try{return this.guessFunctionNameFromLines(lineNo,this.getSource(url));}catch(e){return'getSource failed with url: '+url+', exception: '+e.toString();}},guessFunctionNameFromLines:function(lineNo,source){var reFunctionArgNames=/function ([^(]*)\(([^)]*)\)/;var reGuessFunction=/['"]?([0-9A-Za-z_]+)['"]?\s*[:=]\s*(function|eval|new Function)/;var line="",maxLines=10;for(var i=0;i<maxLines;++i){line=source[lineNo-i]+line;if(line!==undefined){var m=reGuessFunction.exec(line);if(m&&m[1]){return m[1];}else{m=reFunctionArgNames.exec(line);if(m&&m[1]){return m[1];}}}}
   return'(?)';}};
 
-  // http://code.google.com/p/microajax/
-  function microAjax(B,A){this.bindFunction=function(E,D){return function(){return E.apply(D,[D])}};this.stateChange=function(D){if(this.request.readyState==4){this.callbackFunction(this.request.responseText)}};this.getRequest=function(){if(window.ActiveXObject){return new ActiveXObject("Microsoft.XMLHTTP")}else{if(window.XMLHttpRequest){return new XMLHttpRequest()}}return false};this.postBody=(arguments[2]||"");this.callbackFunction=A;this.url=B;this.request=this.getRequest();if(this.request){var C=this.request;C.onreadystatechange=this.bindFunction(this.stateChange,this);if(this.postBody!==""){C.open("POST",B,true);C.setRequestHeader("X-Requested-With","XMLHttpRequest");C.setRequestHeader("Content-type","application/x-www-form-urlencoded");C.setRequestHeader("Connection","close")}else{C.open("GET",B,true)}C.send(this.postBody)}};
+
+  // Small ajax library
+  // http://borisding.com/bajax
+  var bajax=(function(){var action={init:function(option){attr=option;this.checkURL();this.initAjax();},checkURL:function(){if(typeof attr.url=="undefined"){alert(error.e002);return false;}else if(attr.url==null||attr.url==""){alert(error.e003);return false;}},filteredData:function(){var data;if(typeof attr.data!="undefined"){if(attr.data!=""){data=attr.data+"&rid="+Math.random();}else{data="rid="+Math.random();}}else{data="rid="+Math.random();}
+  return data;},checkType:function(){var type;switch(attr.type){case"xml":case"json":return attr.type;break;default:return"text";}},postMethod:function(){var url=attr.url;var data=this.filteredData();xhr.open("POST",url,true);xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");xhr.send(data);},getMethod:function(){var url=attr.url+"?"+this.filteredData();if(this.checkType()=="xml"){if(xhr.overrideMimeType){xhr.overrideMimeType("text/xml");}}
+  xhr.open("GET",url,true);xhr.send(null);},retrieveResult:function(){if(xhr.readyState==4){if(xhr.status==404){alert(error.e404);}
+  if(xhr.status==408){alert(error.e408);}
+  if(xhr.status==200||xhr.status==304){var responseData;if(typeof attr.type!="undefined"&&bajax.checkType()=="xml"){responseData=xhr.responseXML;}else if(typeof attr.type!="undefined"&&bajax.checkType()=="json"){responseData=eval("("+xhr.responseText+")");}
+  else{responseData=xhr.responseText;}
+  attr.callback(responseData);}}},decideMethod:function(){xhr.onreadystatechange=this.retrieveResult;if(typeof attr.method!="undefined"){switch(attr.method){case"POST":this.postMethod();break;default:this.getMethod();}}else{this.getMethod();}},initAjax:function(){xhr=this.createXHR();if(xhr==null){alert(error.eoo4);return false;}else if(xhr.readyState!=0){xhr.abort();}
+  this.decideMethod();},createXHR:function(){var XHR=null;if(typeof XMLHttpRequest!="undefined"){XHR=new XMLHttpRequest();return XHR;}else if(window.ActiveXObject){var arrayMSXml=["MSXML2.XMLHttp.6.0","MSXML2.XMLHttp.3.0"];var i=0;var lengthMSXml=arrayMSXml.length;while(i<lengthMSXml){try{XHR=new ActiveXObject(arrayMSXml[i]);return XHR;}catch(xhrError){}
+  i++;}}
+  throw new Error("Failed to create XHR object!");},loader:function(tagID,loader){document.getElementById(tagID).innerHTML=loader;},clearLoader:function(tagID){document.getElementById(tagID).innerHTML="";},serialized:function(formId){var arrayInput=Array();var form=document.getElementById(formId);var i=0;while(i<form.elements.length){var field=form.elements[i];switch(field.type){case"button":case"submit":case"reset":break;case"text":case"hidden":case"password":arrayInput.push(this.encodeValue(field.name,field.value));break;case"radio":case"checkbox":if(!field.checked){break;}
+  default:if(field.type=="select-one"){arrayInput.push(this.encodeValue(field.name,field.options[field.selectedIndex].value));}else if(field.type=="select-multiple"){var mSn=0;for(var j=0;j<form.elements[field.name].length;j++){if(form.elements[field.name].options[j].selected==true){mSn++;var mName=field.name+mSn;arrayInput.push(this.encodeValue(mName,form.elements[field.name].options[j].value));}}}else{arrayInput.push(this.encodeValue(field.name,field.value));}}
+  i++;}
+  return arrayInput.join("&");},encodeValue:function(name,val){var input=encodeURIComponent(name);input+="=";input+=encodeURIComponent(val);return input;}};return action;})();var error={e404:"ERROR 404: Page was not found!",e408:"ERROR 408: Request Timeout! Please try again.",e000:"ERROR: 'id' is undefined!",e001:"ERROR: 'id' is null or empty!",e002:"ERROR: 'url' is undefined!",e003:"ERROR: 'url' is null or empty!",eoo4:"ERROR: Your browser does not support XHR object!"};var attr=null;var xhr=null;
 
   window.ExceptionNotifier = {};
   $.extend(ExceptionNotifier, {
@@ -32,26 +47,15 @@
     },
 
     send: function(error) {
-      console.log(error)
-      var params = {};
-      paramString = [];
+      var params = [];
       for (var attr in error) {
-        paramString.push(attr + "=" + error[attr]);
+        params.push(attr + "=" + encodeURIComponent(error[attr]) + '');
       }
 
-      microAjax("/js_exceptions", function (res) {
-        alert (res);
-      }, "?" + params.join("&"));
-
-      $.ajax({
-        url: "/",
-        type: "POST",
-        dataType: "text/html",
-        data: $.param(params)
-      });
+      bajax.init({ url: "/js_exceptions", data: params.join("&"), method: "POST"});
     },
 
-    // If error is a string, convert it to a object
+    // If error is a string, convert it to a stub of error object
     formatStringError: function (error) {
       if (typeof error == 'string') {
         var old = error;
