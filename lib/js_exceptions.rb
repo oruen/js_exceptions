@@ -1,7 +1,14 @@
 class JsExceptions
-  VERSION = "0.3"
+  VERSION = "0.4"
   cattr_accessor :config
-  
+
+  # Configuration sample
+  #  JsExceptions.configure do |c|
+  #    c.handler = :email # or :hoptoad
+  #    c.email_prefix = "[js error] "
+  #    c.exception_recipients = %w(my-super-mail@gmail.com my-second-mail@gmail.com)
+  #  end
+
   class Configuration
     attr_accessor :sender_address
     attr_accessor :exception_recipients
@@ -32,8 +39,8 @@ class JsExceptions
   
   class Notifier < ActionMailer::Base
     self.template_root = "#{File.dirname(__FILE__)}/views"
-
     def self.reloadable?() false end
+
     def exception_notification request, exception, data = {}
       content_type "text/plain"
 

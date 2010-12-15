@@ -1,103 +1,52 @@
-JsExceptions
-============
+= JsExceptions
 
-Плагин для отлова ошибок в JS. Может посылать ошибку как через Hoptoad, так и простым письмом.
-Конфиг должен выглядеть так:
+Javascript errors catching plugin. Delivers errors to email or to hoptoad.
+Consists of 3 files:
 
-JsExceptions.configure do |c|
-  c.handler = :hoptoad # может быть :hopotad или :email
-  c.email_prefix = "[js my-super-project-name] "
-  c.exception_recipients = %w(my@email.com my-second-email@gmail.com)
-end
+- exception_notifier.js - library for catching errors
+- notifying_start.js, notifying_stop.js - used in concatenation framework (Jammit or Sprockets). Must be inserted at the top and at the bottom of file list.
 
-Как это работает
-================
 
-  При подключении на странице основного файла, exception_notifier.js, в браузерах Firefox и IE заменяется window.onerror хендлер.
-  В браузерах на движке WebKit и Opera window.onerror не существует, и единственным способом отловить возникновение ошибки является
-  try-catch:
-  try {
-    <код, который ломается>
-  } catch (e) {
-    // для остальных браузером подразумевается работающий window.onerror
-    if (/Opera|Webkit/.test(navigator.userAgent)) {
-      ExceptionNotifier.notify(e);
-    }
-    // прокидывать или нет ошибку выше - на ваш выбор
-    throw(e);
-  }
-  После этого, при возникновении ошибки на странице, по адресу /js_exceptions уходит POST-запрос с информацией об ошибке.
-  А уже там этот запрос обрабатывает Rails Metal хендлер, который рассылает емейлы по адресам из JsExceptions::Notifier.exception_recipients.
-  
+== Usage and configuration
 
-Что нужно, чтобы это заработало
-===============================
+Configure JS Exceptions:
 
-  Так как используется Rails Metal, версия рельсов должна быть не ниже 2.3
-  Плагин рассчитывает на использование в приложении Sprockets, но может быть использован и без него.
+ # config/initializers/js_exceptions.rb
+ JsExceptions.configure do |c|
+   c.handler = :email # or :hoptoad
+   c.email_prefix = "[js error] "
+   c.exception_recipients = %w(my-super-mail@gmail.com my-second-mail@gmail.com)
+ end
 
-  Работа без Sprockets:
+Insert in head of page:
 
-    1) Скопировать в public/javascripts файл app/javascripts/exception_notifier.js из плагина.
-    2) Подключить файл в нужном месте страницы, предварительно подключив jQuery.
+ <%= js_exceptions_option %>
 
-  Работа со Sprockets:
+Include JS Exceptions:
 
-    Добавить vendor/plugins/js_exceptions/app/javascripts/notifying_start.js в начало списка source_files текущей конфигурации,
-    а vendor/plugins/js_exceptions/app/javascripts/notifying_start.js в его конец.
-    Пример:
-      Было:
-        :asset_root: public
-        :load_path:
-          - app/javascripts/
-          - app/javascripts/**
-          - vendor/sprockets/*/src
-          - vendor/plugins/*/app/javascripts
-        :source_files:
-          - app/javascripts/application.js
-      Стало:
-        :asset_root: public
-        :load_path:
-          - app/javascripts/
-          - app/javascripts/**
-          - vendor/sprockets/*/src
-          - vendor/plugins/*/app/javascripts
-        :source_files:
-          - vendor/plugins/js_exceptions/app/javascripts/notifying_start.js
-          - app/javascripts/application.js
-          - vendor/plugins/js_exceptions/app/javascripts/notifying_stop.js
+ <%= javascript_include_tag "exception_notifier" %>
 
-    А я делаю всё тоже самое для всех конфигураций Sprockets добавляя в config/initializers файл со таким содержимым
-    (используется http://github.com/neodude/sprockets-rails):
-    
-    class Sprocket
-      protected
-      def configuration
-        conf = load_configuration
-        source_files = conf[:source_files]
-        if source_files
-          source_files = source_files.to_a
-          source_files.insert(0, "vendor/plugins/js_exceptions/app/javascripts/notifying_start.js")
-          source_files.push("vendor/plugins/js_exceptions/app/javascripts/notifying_stop.js")
-        end
-        conf
-      end
-    end
+Or inlclude JS Exceptions in your asset packaging system:
 
-Что ещё надо знать
-==================
-   
-  Клиентская часть настраивается через свойства объект window.ExceptionNotifierOptions:
-    logErrors - отправлять ли опоовещения об ошибках на сервер
-    sendHtml - прикреплять ли html-содержимое страницы к отчету
-  Можно воспользоваться хелпером js_exceptions_options
+ javascripts:
+  behaviors:
+    - public/javascripts/exception_notifier.js
+    - public/javascripts/notifying_start.js
+    - public/javascripts/behaviors/*.js
+    - public/javascripts/notifying_stop.js
 
-  Настройки почтовых сообщений во многом повторяют Exception Notifier:
-    JsExceptions::Notifier.sender_address - адрес отправителя сообщений
-    JsExceptions::Notifier.exception_recipients - список получателей писем
-    JsExceptions::Notifier.email_prefix - префикс темы письма
+In your code:
 
-  js-код вдохновлен DamnIT, https://damnit.jupiterit.com/
-  ruby-код - Exception Notifier, http://github.com/rails/exception_notification/
+ try {
+   throw("Test exception");
+ } catch(e) {
+   ExceptionNotifier.notify(e);
+ }
 
-Copyright (c) 2009-2010 oruen, released under the MIT license
+== Installation
+
+ script/plugin install git://github.com/over/js_exceptions.git
+ script/generate js_exceptions
+
+=== Contributors
+{Mikhail Tabunov}[http://github.com/over], {Nick Recobra}[http://github.com/oruen]
