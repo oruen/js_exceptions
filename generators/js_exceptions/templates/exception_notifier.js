@@ -12,16 +12,17 @@
   return stack;},guessFunctionName:function(url,lineNo){try{return this.guessFunctionNameFromLines(lineNo,this.getSource(url));}catch(e){return'getSource failed with url: '+url+', exception: '+e.toString();}},guessFunctionNameFromLines:function(lineNo,source){var reFunctionArgNames=/function ([^(]*)\(([^)]*)\)/;var reGuessFunction=/['"]?([0-9A-Za-z_]+)['"]?\s*[:=]\s*(function|eval|new Function)/;var line="",maxLines=10;for(var i=0;i<maxLines;++i){line=source[lineNo-i]+line;if(line!==undefined){var m=reGuessFunction.exec(line);if(m&&m[1]){return m[1];}else{m=reFunctionArgNames.exec(line);if(m&&m[1]){return m[1];}}}}
   return'(?)';}};
 
+  // http://code.google.com/p/microajax/
+  function microAjax(B,A){this.bindFunction=function(E,D){return function(){return E.apply(D,[D])}};this.stateChange=function(D){if(this.request.readyState==4){this.callbackFunction(this.request.responseText)}};this.getRequest=function(){if(window.ActiveXObject){return new ActiveXObject("Microsoft.XMLHTTP")}else{if(window.XMLHttpRequest){return new XMLHttpRequest()}}return false};this.postBody=(arguments[2]||"");this.callbackFunction=A;this.url=B;this.request=this.getRequest();if(this.request){var C=this.request;C.onreadystatechange=this.bindFunction(this.stateChange,this);if(this.postBody!==""){C.open("POST",B,true);C.setRequestHeader("X-Requested-With","XMLHttpRequest");C.setRequestHeader("Content-type","application/x-www-form-urlencoded");C.setRequestHeader("Connection","close")}else{C.open("GET",B,true)}C.send(this.postBody)}};
+
   window.ExceptionNotifier = {};
   $.extend(ExceptionNotifier, {
     notify: function (e) {
       if ( typeof(ExceptionNotifierOptions) !== 'undefined' && (typeof(ExceptionNotifierOptions.logErrors) !== 'undefined') && !ExceptionNotifierOptions.logErrors ) { return; }
 
       e = this.formatStringError(e);
-      $.extend(e, {
-        'Browser': navigator.userAgent,
-        'Page': location.href
-      });
+      e['Browser'] = navigator.userAgent;
+      e['Page'] = location.href;
 
       // Format stack trace
       e.Stack = printStackTrace({e: e, guess: false}).join("\n");
@@ -33,14 +34,17 @@
     send: function(error) {
       console.log(error)
       var params = {};
-      params.subject = error.subject;
-
+      paramString = [];
       for (var attr in error) {
-        params[attr] = error[attr];
+        paramString.push(attr + "=" + error[attr]);
       }
 
+      microAjax("/js_exceptions", function (res) {
+        alert (res);
+      }, "?" + params.join("&"));
+
       $.ajax({
-        url: "/js_exceptions",
+        url: "/",
         type: "POST",
         dataType: "text/html",
         data: $.param(params)
