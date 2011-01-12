@@ -20,7 +20,7 @@ Configure JS Exceptions:
 
 Insert in head of page:
 
- <%= js_exceptions_option %>
+ <%= js_exceptions_options %>
 
 Include JS Exceptions:
 
@@ -50,3 +50,4 @@ In your code:
 
 === Contributors
 {Mikhail Tabunov}[http://github.com/over], {Nick Recobra}[http://github.com/oruen]
+
