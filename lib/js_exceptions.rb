@@ -91,6 +91,8 @@ class JsExceptions
     def self.notify(request, exception, data)
       xml = Builder::XmlMarkup.new(:indent => 0)
       xml.instruct!
+      stack = parse_stack(exception["Stack"])
+
       result = xml.notice(:version => HoptoadNotifier::API_VERSION) do |b|
         b.tag!("api-key", HoptoadNotifier.configuration.api_key)
         b.notifier do
@@ -101,11 +103,14 @@ class JsExceptions
         b.error do
           b.class "JS Error"
           b.message exception["message"]
-          if exception["Stack"]
-            b.backtrace do
-              parse_stack(exception["Stack"]).each do |bl|
+          b.backtrace do
+           if stack.any?
+              stack.each do |bl|
                 b.line(:method => bl.method, :file => bl.file, :number => bl.line)
               end
+            else
+              b.line(:method => "", :file => "applicaiton.js", :number => "1")
+              b.line(:method => "", :file => "applicaiton.js", :number => "1")
             end
           end
         end
@@ -121,10 +126,11 @@ class JsExceptions
           b.tag!("environment-name", RAILS_ENV)
         end
       end
-      
+
       sender = HoptoadNotifier::Sender.new(HoptoadNotifier.configuration)
       sender.send_to_hoptoad(result.to_s)
     end
   end
   
 end
+
