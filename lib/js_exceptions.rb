@@ -1,7 +1,7 @@
+# encoding: utf-8
+require 'js_exceptions/version'
+require 'action_mailer'
 class JsExceptions
-  VERSION = "0.4"
-  cattr_accessor :config
-
   # Configuration sample
   #  JsExceptions.configure do |c|
   #    c.handler = :email # or :hoptoad
@@ -22,18 +22,28 @@ class JsExceptions
       @handler = :email
     end
   end
-  
-  def self.configure(&block)
-    self.config ||= Configuration.new
-    block.call(config)
-  end
-  
-  def self.notify(request, exception, data = {})
-    case config.handler
-    when :email
-      Notifier.deliver_exception_notification(request, exception, data)
-    when :hoptoad
-      JsHoptoadNotifier.notify(request, exception, data)
+
+  class << self
+    def config
+      @@config
+    end
+
+    def config= val
+      @@config = val
+    end
+
+    def configure(&block)
+      self.config ||= Configuration.new
+      block.call(config)
+    end
+    
+    def notify(request, exception, data = {})
+      case config.handler
+      when :email
+        Notifier.deliver_exception_notification(request, exception, data)
+      when :hoptoad
+        JsHoptoadNotifier.notify(request, exception, data)
+      end
     end
   end
   
